@@ -1,0 +1,47 @@
+.cardImg:hover {
+  background-color: gray;
+  cursor: pointer;
+}
+
+.cardImg {
+  width: 100px;
+  /*height: 116px;*/
+  padding: 10px;
+  background-color: pink;
+}
+
+.playerSection {
+    height: 320px;
+}
+
+/*.cardsRow {
+  display: inline;
+*/
+  
+.card0 {
+    position:absolute;
+      top: 0px;
+      left: 0px;
+    z-index: 1;
+}
+
+.card1 {
+     position:absolute;
+    top: 50px;
+    left: 0px;
+    z-index: 2;
+ }
+ 
+ .card2 {
+     position:absolute;
+    top: 100px;
+    left: 0px;
+    z-index: 3;
+ }
+ 
+ .card3 {
+     position:absolute;
+    top: 150px;
+    left: 0px;
+    z-index: 4;
+ }

@@ -1,0 +1,57 @@
+<html>
+    <head>
+
+        <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="{{ asset('css/main.css') }}" />
+
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+        <script src="{{ asset('js/main.js') }}" type="text/javascript"></script>
+    </head>
+    <body data-img-dir="{{ asset('img/') }}">
+        
+        <div class="container-fluid">
+            
+            <div class="row">
+                <button id="btnGameNew" class="btn-default">Start New Game</button>
+                
+                <button id="btnDealCards" class="btn-default">Deal Cards</button>
+            </div>
+            
+            <div id="playerRows">
+            </div>
+
+            {#<div id="playerSection">
+                <div class="hdrRow">
+                    <h3 class="hdrName">You</h3>
+                </div>
+
+                <div class="cardsRow" >
+                    <div class="row" id="rowPlayer0">#}
+                        
+{#                    </div>#}
+                    {#<div id="pCard1" class="cardBox">
+                        <img src="{{ asset('/img/cards_small/01C.png') }}" class="cardImg">   
+                    </div>
+
+                    <div id="pCard2" class="cardBox">
+                        
+                    </div>
+
+{#                </div>#}
+            
+{#            </div>#}
+
+{#<div class="cardBox col-1">
+	<img class="cardImg card0" src="{{ asset('img/') }}cards_small/02H.png">
+        
+        <img class="cardImg card1" src="{{ asset('img/') }}cards_small/02S.png">
+        
+        <img class="cardImg card2" src="{{ asset('img/') }}cards_small/02D.png">
+        
+        <img class="cardImg card3" src="{{ asset('img/') }}cards_small/02C.png">
+</div>#}
+        </div>
+        
+    </body>
+</html>
+

@@ -1,0 +1,78 @@
+**GoFish game project notes**
+19/4:
+Got some API calls going
+-initialiseCards (sets up players, hands, etc.)
+-dealCardsToPlayers - returns player, hand & cards info
+-JS method displays a row & stacks cards OK on another
+-didn't need to show other player's cards. Keep for test mode?
+Only need to show:
+-player's cards
+-deck
+-area to represent other players
+-area to represent status messages
+
+Need call/method to sort cards in deck by position once card(s) removed!!
+
+Buttons for actions:
+-ask Player if have card:
+dialog to choose player & card to ask for
+when other player is asked, they say "Go fish" or give card
+when you are asked, you say "Go fish" or give card
+-transfer from hand to another hand (update cards table)
+-or transfer from deck to hand (update cards table)
+
+
+Should have:
+-made a separate shuffle method/call
+-made a fixed card table with suit, display_label, value and image_name
+-put game_id and player_id in the hand table. Remove hand_id and game_id from the player table
+-add active field to game and hand tables
+
+13/4:
+-installed Postman
+-got this API call going to find cards in deck:
+http://localhost/gofish/game/7/deck/7
+-had problems with serializer when have relations between entities (circular reference)
+-insert commands for player, hand, game, deck, card
+-probably don't need relation between card & game (cards always in deck or hand)
+
+
+
+
+11/4:
+-created these entities: game, deck, player, hand, card
+-made an initialise route for starting a new game...carry on with
+-got debugging going in Firefox/Netbeans
+-got main player cards stacking in UI
+-realised don't need to show other players' cards
+-need to work on deck methods - shuffle, take from top, add to bottom
+-player: add to hand, give to another player
+How will player ask another player if they have a card?
+e.g. choose card, choose player...
+
+localhost/gofish/main
+
+
+Following test PHP file - t_poker_cards.php and Deck.php class
+-need shuffle, takeCardFromTop and addCardToBottom($card) methods updated to use SQL
+
+Set up to run just through test server
+php -S 127.0.0.1:8000 -t public
+
+Have a MainController
+
+Set up database "gofish" and one table
+
+Have a Card entity and CardRepository
+-using Doctrine ORM or querybuilder
+
+HTML page - show hands:
+http://localhost:8000/main
+
+API call - JSON response:
+http://localhost:8000/deck
+
+not in git yet
+
+Planning to just use jQuery
+-see main.js file
