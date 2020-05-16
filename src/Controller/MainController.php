@@ -36,12 +36,13 @@ class MainController extends AbstractController
     public function deckFetchSingle(string $deckId, DeckRepository $deckRepo, 
         CardRepository $cardRepo) { 
 //        $deck = $deckRepo->find($deckId);
+        $deckId = intval($deckId);
         
         if ($cardRepo->countAll() === 0) {
             $cards = $this->getDeckInitialCards();
             $cardRepo->insertMany($cards); 
         }
-        $cards = $cardRepo->fetchCardsInDeck(intval($deckId));
+        $cards = $cardRepo->fetchCardsInDeck($deckId);
         
         $json = [
             "deck" => [
@@ -102,6 +103,81 @@ class MainController extends AbstractController
     
     /**
      * API call
+     * @Route("/game/{gameId}/player/{playerId}/hand/{handId}/card/{cardId}", name="cardFetchSingle", methods={"GET"})
+     */
+    public function cardFetchSingle($cardId, CardRepository $cardRepo) {
+        $card = $cardRepo->fetchSingle($cardId);
+        return new JsonResponse(["cards" => [$card]]);
+    }
+    
+    /**
+     * API call
+     * @Route("/game/{gameId}/player/{playerId}/hand/{handId}/card", 
+     * name="handContainsCardWithNumber", methods={"GET"})
+     */
+    public function handContainsCardWithNumber($handId, HandRepository $handRepo, 
+        CardRepository $cardRepo, Request $request) {
+        
+        $cardValue = $request->query->get("card_value");
+        
+        $cardsInHand = $cardRepo->fetchCardsByHand(intval($handId));
+        $cardNum = intval($cardValue);
+        
+        $cardFound = null;
+        foreach ($cardsInHand as $card) {
+            if (intval($card->getValue()) === $cardNum) {
+                $cardFound = $card;
+                break;
+            }
+        }
+        
+        if (is_null($cardFound)) {
+            $card = [];
+        }
+        else {
+            $card = [$cardRepo->serializeCard($cardFound)];
+        }
+        
+        return new JsonResponse(["cards" => $card]);
+    }
+    
+    /**
+     * @Route("/game/{gameId}/deck/{deckId}/take/{numCards}", name="deckFetchCard", methods={"GET"})
+     */
+    public function takeCardsFromDeck($deckId, $numCards, CardRepository $cardRepo) {
+        $cards = $cardRepo->fetchTopCardsInDeck($deckId, 1);
+        
+        $json = [
+            "cards" => $cardRepo->serializeCards($cards)
+        ];
+        
+        return new JsonResponse($json); 
+    }
+    
+    /**
+     * API call
+     * @Route("/game/{gameId}/player/{playerId}/hand/{handId}/card/{cardId}", 
+     * name="assignCardToPlayer", methods={"POST"})
+     */
+    public function assignCardToPlayer($gameId, $playerId, $handId, $cardId, 
+        CardRepository $cardRepo, HandRepository $handRepo, Request $request) {
+        
+        $content = json_decode($request->getContent(), true);
+        $deckId = $content["deck"]["id"];
+        
+        $hand = $handRepo->find($handId);
+        
+        $cards = $cardRepo->assignCardsToPlayer($deckId, $hand, [$cardId]);
+        
+        $json = [
+            "cards" => $cardRepo->serializeCards($cards)
+        ];
+        
+        return new JsonResponse($json); 
+    }
+    
+    /**
+     * API call
      * @Route("/game", name="gameInitialise", methods={"POST"})
      */
     public function gameInitialise(Request $request, 
@@ -139,6 +215,9 @@ class MainController extends AbstractController
                 "status" =>  "OK",
                 "game" => [
                     "id" => $game->getId()
+                ],
+                "deck" => [
+                    "id" => $deck->getId()
                 ]
             ]
         );

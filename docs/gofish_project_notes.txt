@@ -1,4 +1,16 @@
 **GoFish game project notes**
+
+16/5/20:
+
+
+3/5/20:
+
+
+27/4
+Turn - 
+
+
+
 19/4:
 Got some API calls going
 -initialiseCards (sets up players, hands, etc.)
@@ -76,3 +88,46 @@ not in git yet
 
 Planning to just use jQuery
 -see main.js file
+
+
+Symfony Request/get params notes:
+https://symfony.com/doc/current/introduction/http_fundamentals.html
+
+routing:
+https://symfony.com/doc/current/routing.html#route-parameters
+
+doctrine:
+https://symfony.com/doc/current/doctrine.html#fetching-objects-from-the-database
+
+
+entities:
+
+game - player - hand - card
+game - deck - card
+
+*game
+-started
+-players
+-deck
+
+*deck
+-cards
+
+*player
+-name
+-hand
+
+*hand
+-cards
+
+*card
+
+Create hands
+
+Create deck
+
+Create game - with deckID
+
+Create player(s)
+
+Create cards with gameID and DeckID and position (ordered to begin with)

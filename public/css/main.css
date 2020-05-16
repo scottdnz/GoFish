@@ -45,3 +45,16 @@
     left: 0px;
     z-index: 4;
  }
+ 
+ body {
+     margin-left: 2%;
+     /*padding-left: 10px;*/
+ }
+ 
+ .fail {
+     color: red;
+ }
+ 
+ .success {
+     color: green;
+ }

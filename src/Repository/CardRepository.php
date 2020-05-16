@@ -19,6 +19,15 @@ class CardRepository extends ServiceEntityRepository
         parent::__construct($registry, Card::class);
     }
     
+    public function fetchSingle($cardId) {
+//        $em = $this->getEntityManager();
+        $card = $this->find($cardId);
+        return $this->serializeCard($card);
+    }
+    
+//    public function
+//    fetchCardsByHand($handId)
+    
     public function insertMany($cards, $game, $deck=null, $hand=null) {
         $previousDeckPositionsAlreadyTaken = [];
         $deckLen = count($cards);
@@ -54,18 +63,66 @@ class CardRepository extends ServiceEntityRepository
         $em->flush();
     }
     
-    public function fetchCardsInDeck($deckId, $numCards=null) {             
-        $q =  $this->createQueryBuilder('c');
+    function comparator($card1, $card2) { 
+        return $card1->getPosition() > $card2->getPosition(); 
+    } 
+    
+    /**q
+     * Run fetchCardsInDeck before this
+     * @param type $cards
+     * @return type
+     */
+    public function reorderCardsInDeckAfterExtraction($deckId) {
+        $em = $this->getEntityManager();
+        
+        $cardArr = $this->fetchAllCardsInDeck($deckId);
+        
+        usort($cardArr, [$this, "comparator"]);
+        
+        for ($i = 0; $i < count($cardArr); $i++) {
+            if ($cardArr[$i]->getPosition() !== $i) {
+                $cardArr[$i]->setPosition($i);
+            }
+            $em->persist($cardArr[$i]);
+        }
+        
+        $em->flush();
+        
+        return $cardArr;
+    }
+    
+    public function fetchAllCardsInDeck($deckId) {
+         $q =  $this->createQueryBuilder('c');
         $q->join('c.deck', 'd')
             ->where('d.id = :deckId')
             ->andWhere($q->expr()->isNull('c.hand'))
             ->setParameter('deckId', $deckId)
             ->orderBy('c.position', 'ASC');
+            
+        return $q->getQuery()->getResult();
+    }
+    
+    public function fetchTopCardsInDeck($deckId, $numCards=null) {
+        $cardPositionsWanted = [];
+        for ($i = 0; $i < $numCards; $i++) {
+            $cardPositionsWanted[] = $i;
+        }
+        
+        $q =  $this->createQueryBuilder('c');
+        $q->join('c.deck', 'd')
+            ->where('d.id = :deckId')
+            ->andWhere($q->expr()->isNull('c.hand'))
+            ->andWhere("c.position IN(:cardPositionsWanted)")
+            ->setParameter('deckId', $deckId)
+            ->setParameter('cardPositionsWanted', $cardPositionsWanted)
+            ->orderBy('c.position', 'ASC');
         if (! is_null($numCards)) {
             $q->setMaxResults($numCards);
         } 
             
-        return $q->getQuery()->getResult();
+        $cards = $q->getQuery()->getResult();
+        return $cards;
+//        return $this->reorderCardsInDeckAfterExtraction($cards);
     }
     
     public function fetchCardsByHand($handId) {
@@ -90,7 +147,7 @@ class CardRepository extends ServiceEntityRepository
             $hand = $player->getHand();
             $handId = $hand->getId();
             // take 5 cards from top position
-            $cards = $this->fetchCardsInDeck($deckId, 5);
+            $cards = $this->fetchTopCardsInDeck($deckId, 5);
             
             // update the cards so position = null, hand_id populated
             foreach ($cards as $card) {
@@ -99,6 +156,8 @@ class CardRepository extends ServiceEntityRepository
                 $card->setPosition(null);
                 $em->persist($card);
             }
+            $em->flush();
+            
             $cardsDealt[] = [
                 "player" => [
                     "id" => $player->getId(),
@@ -110,19 +169,34 @@ class CardRepository extends ServiceEntityRepository
                 "cards" => $this->serializeCards($cards)
             ];
             
-            $em->flush();
+            $allCards = $this->reorderCardsInDeckAfterExtraction($deckId);
         }
         
         return $cardsDealt;
     }
     
-//    public function takeCardsFromTopOfDeck($deckId, $numCards) {
-//        $cards = $this->fetchCards($deckId, $numCards);
-////        foreach ($cards as $card) {
-////            
-////        }
-//        $i = 0;
-//    }
+    public function assignCardsToPlayer($deckId, $hand, $cardIds) {
+        $em = $this->getEntityManager();
+        $cards = [];
+        
+        foreach ($cardIds as $cardId) {
+            $card = $this->find($cardId);
+
+            if (! is_null($card)) {
+                $card->setHand($hand);
+                $card->setDeck(null);
+                $card->setPosition(null);
+                $em->persist($card);
+                $cards[] = $card;
+            }
+        }
+        
+        $em->flush();
+        
+        $this->reorderCardsInDeckAfterExtraction($deckId);
+        
+        return $cards;
+    }
     
     public function listAll() {
         return $this->findAll();
@@ -149,20 +223,23 @@ class CardRepository extends ServiceEntityRepository
     }
     
     public function serializeCard($card) {
-        $hand = $card->getHand();
-        $deck = $card->getDeck();
+        $cardArr = [];
+        if (! is_null($card)) {
+            $hand = $card->getHand();
+            $deck = $card->getDeck();
 
-        $cardArr = [
-            "id" => $card->getId(),
-            "suit" => $card->getSuit(),
-            "display_label" => $card->getDisplayLabel(),
-            "value" => $card->getValue(),
-            "image_name" => $card->getImageName(),
-            "position" => $card->getPosition(),
-            "hand_id" => is_null($hand) ? null: $hand->getId(),
-            "deck_id" => is_null($deck) ? null: $deck->getId(),
-            "game_id" => $card->getGame()->getId(),
-        ];
+            $cardArr = [
+                "id" => $card->getId(),
+                "suit" => $card->getSuit(),
+                "display_label" => $card->getDisplayLabel(),
+                "value" => $card->getValue(),
+                "image_name" => $card->getImageName(),
+                "position" => $card->getPosition(),
+                "hand_id" => is_null($hand) ? null: $hand->getId(),
+                "deck_id" => is_null($deck) ? null: $deck->getId(),
+                "game_id" => $card->getGame()->getId(),
+            ];
+        }
         return $cardArr;
     }
     

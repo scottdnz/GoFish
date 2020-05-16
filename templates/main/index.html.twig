@@ -9,16 +9,34 @@
     </head>
     <body data-img-dir="{{ asset('img/') }}">
         
-        <div class="container-fluid">
-            
+        <div class="container-fluid" id="statusArea">
             <div class="row">
+                Game Status:&nbsp;<span id="statusGame">Not yet started</span>
+            </div>
+            <div class="row" id="statusMessages">
+            </div>
+            <div class="row">&nbsp;<br></div>
+
+            <div class="row" id="actionBar">
                 <button id="btnGameNew" class="btn-default">Start New Game</button>
                 
-                <button id="btnDealCards" class="btn-default">Deal Cards</button>
+                {#&nbsp;
+                <button id="btnDealCards" class="btn-default">Deal Cards</button>#}
             </div>
+        </div>
+        
+            <div>
+                <button id="btnGoFish">Go Fish</button>
+            </div>
+            
+        <div class="container-fluid" id="playersArea">
+            <br>
+            
             
             <div id="playerRows">
             </div>
+            
+            
 
             {#<div id="playerSection">
                 <div class="hdrRow">
