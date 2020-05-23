@@ -93,7 +93,8 @@ $(document).ready(function() {
     let updateStatusArea = function() {
         $("#statusGame").html("started, game ID: <span id='gameId'>" + gameIdCurrent + "</span>");
         
-        let statusMessages = ["No. of players: " + numPlayers,  
+        let statusMessages = [
+//            "No. of players: " + numPlayers,  
             "Player's turn: " + currentPlayerTurn["player"]["name"]
         ];
         let list = document.createElement("ul");
@@ -126,42 +127,12 @@ $(document).ready(function() {
             currentPlayerTurn = data[0];
             currentPlayers = data;
             updateStatusArea();
-            populateActionBar();
+//            populateActionBar();
         });
     }
 //    })
 
-    let populateActionBar = function() {
-        
-        
-        let currentPlayerId = currentPlayerTurn["player"]["id"];
-        
-        for (let i = 0; i < currentPlayers.length; i++) {
-            if (currentPlayers[i]["player"]["id"] === currentPlayerId) {
-                continue;
-            }
-            let btnMsg = "Ask " + currentPlayers[i]["player"]["name"] + " for a card";
-            let btnText = document.createTextNode(btnMsg);
 
-            let btnAsk = document.createElement("button");
-            btnAsk.setAttribute("data-player-id", currentPlayers[i]["player"]["id"]);
-            btnAsk.setAttribute("data-player-name", currentPlayers[i]["player"]["name"]);
-            btnAsk.setAttribute("data-hand-id", currentPlayers[i]["hand"]["id"]);
-            
-            btnAsk.className = "btnAsk";
-            btnAsk.appendChild(btnText);
-
-            let div = document.createElement("div");
-            div.className = "col-sm-2";
-            div.appendChild(btnAsk);
-
-            $("#actionBar").append(div);
-        }
-        
-        $(".btnAsk").click(function() {
-            respondToBtnAskClick($(this));
-        });
-    }; 
 
     let clearActionBar = function() {
         $("#actionBar").empty();
@@ -208,69 +179,15 @@ $(document).ready(function() {
        return selector;
     };
     
-    let actionResponse = function(cards, playerName) {
-//        console.log("Cards");
-//        console.log(cards.length);
-        let cardFound = (cards.length > 0);
-        let resultClass = (cardFound === true ? "success" : "fail");
-        let msg = playerName;
+    let startTurns = function() {
+        let player = new Player();
+        let barCols = player.buildActionResponseBar(); 
         
-        if (cardFound === true) {
-            msg += " has the card & gives it to you!";
-        }
-        else {
-            msg += " does not have the card. Go Fish!";
+        for (let i = 0; i < barCols.length; i++) {
+            $("#actionResponse").append(barCols[i]);
         }
         
-        let resultMsg = document.createTextNode(msg);
-        
-        let resultContainer = document.createElement("span")
-        resultContainer.className = resultClass;
-        resultContainer.appendChild(resultMsg);
-        
-        let actionResp = document.createElement("div");
-        actionResp.id = "actionResponse";
-        actionResp.appendChild(resultContainer);
-        return actionResp;
-    }
-    
-    let checkIfHandContainsCard = function($selectElem, gameId, playerId, playerName, handId) {
-        let cardNum = $selectElem.val();
-        let requestUrl = "/gofish/game/" + gameId + "/player/" + playerId + "/hand/" + 
-                handId + "/card?card_value=" + cardNum;
-//        alert(requestUrl);
-        
-        $.ajax({
-            method: "GET",
-            url: requestUrl,
-//            contentType: "application/json",
-            dataType: "json"
-//            data: JSON.stringify(reqData) 
-        })
-        .done(function(data) {
-//            console.log(data);
-            let actionResp = actionResponse(data["cards"], playerName);
-            $("#actionBar").append(actionResp);
-        });
-    };
-    
-    let respondToBtnAskClick = function($btnElem) {
-       
-       let selector = buildCardSelector();
-       
-       $("#actionBar").append(selector);
-       
-       let gameId = $("#gameId").text();
-       let playerId = $btnElem.data("player-id");
-       let playerName = $btnElem.data("player-name");
-       let handId = $btnElem.data("hand-id");
-       
-       $("#selectCardInHand").change(function() {
-           checkIfHandContainsCard($(this), gameId, playerId, playerName, handId);
-       });
-       
-
-    };
+    }   
        
     $("#btnGameNew").click(function() {
         let reqData = { 
@@ -290,12 +207,12 @@ $(document).ready(function() {
             data: JSON.stringify(reqData) 
         })
         .done(function(data) {
-            
             gameIdCurrent = data["game"]["id"];
             deckIdCurrent = data["deck"]["id"]
 //            $("#btnGameNew").attr("readonly", "true");
             clearActionBar();
             dealCards();
+            startTurns();
             
            
     
@@ -303,50 +220,173 @@ $(document).ready(function() {
         });
     });
     
-    $("#btnGoFish").click(function() {
-        let url = "/gofish/game/" + gameIdCurrent + "/deck/" + deckIdCurrent + "/take/1";
-//       let url = "/gofish/game/122/deck/122/take/1";
+//    $("#btnNextTurn").click(function() {
+//        console.log("currentPlayerTurn");
+//        console.log(currentPlayerTurn);
+//        
+//    });
+//    
+//    $("#btnGoFish").click(function() {
+//        let url = "/gofish/game/" + gameIdCurrent + "/deck/" + deckIdCurrent + "/take/1";
+////       let url = "/gofish/game/122/deck/122/take/1";
+//
+//        // Take a card from the top
+//        $.ajax({
+//            method: "GET",
+//            url: url
+//        })
+//        .done(function(data) {
+//            let cardId = data["cards"][0]["id"];
+//            // Assign card to player
+//            let mainPlayer = [];
+//            for (i = 0; i < currentPlayers.length; i++) {
+//                if (currentPlayers[i]["player"]["name"] = "clientPlayer") {
+//                    mainPlayer = currentPlayers[i];
+//                }
+//            }
+//    
+//            let url = "/gofish/game/" + gameIdCurrent + "/player/" + mainPlayer["player"]["id"] + 
+//                    "/hand/" + mainPlayer["hand"]["id"] + "/card/" + cardId;
+////            console.log("url: " + url);
+//            
+//            let reqData = {
+//                "deck": {
+//                    "id": deckIdCurrent
+//                }
+//            };
+//            
+//            $.ajax({
+//                method: "POST",
+//                url: url,
+//                contentType: "application/json",
+//                dataType: "json",
+//                data: JSON.stringify(reqData) 
+//            })
+//            .done(function(data) {
+//                alert ("Card retrieved & assigned to hand: " + data["cards"][0]["image_name"]);
+////                console.log("response from assign card");
+////                console.log(data)
+//            });
+//    
+//    
+//        });
+//    });
 
-        // Take a card from the top
-        $.ajax({
-            method: "GET",
-            url: url
-        })
-        .done(function(data) {
-            let cardId = data["cards"][0]["id"];
-            // Assign card to player
-            let mainPlayer = [];
-            for (i = 0; i < currentPlayers.length; i++) {
-                if (currentPlayers[i]["player"]["name"] = "clientPlayer") {
-                    mainPlayer = currentPlayers[i];
-                }
-            }
-    
-            let url = "/gofish/game/" + gameIdCurrent + "/player/" + mainPlayer["player"]["id"] + 
-                    "/hand/" + mainPlayer["hand"]["id"] + "/card/" + cardId;
-//            console.log("url: " + url);
-            
-            let reqData = {
-                "deck": {
-                    "id": deckIdCurrent
-                }
-            };
-            
-            $.ajax({
-                method: "POST",
-                url: url,
-                contentType: "application/json",
-                dataType: "json",
-                data: JSON.stringify(reqData) 
-            })
-            .done(function(data) {
-                alert ("Card retrieved & assigned to hand: " + data["cards"][0]["image_name"]);
-//                console.log("response from assign card");
-//                console.log(data)
-            });
-    
-    
-        });
-    });
+//    let populateActionBar = function() {
+//        
+//        
+//        let currentPlayerId = currentPlayerTurn["player"]["id"];
+//        
+//        for (let i = 0; i < currentPlayers.length; i++) {
+//            if (currentPlayers[i]["player"]["id"] === currentPlayerId) {
+//                continue;
+//            }
+//            let btnMsg = "Ask " + currentPlayers[i]["player"]["name"] + " for a card";
+//            let btnText = document.createTextNode(btnMsg);
+//
+//            let btnAsk = document.createElement("button");
+//            btnAsk.setAttribute("data-player-id", currentPlayers[i]["player"]["id"]);
+//            btnAsk.setAttribute("data-player-name", currentPlayers[i]["player"]["name"]);
+//            btnAsk.setAttribute("data-hand-id", currentPlayers[i]["hand"]["id"]);
+//            
+//            btnAsk.className = "btnAsk";
+//            btnAsk.appendChild(btnText);
+//
+//            let div = document.createElement("div");
+//            div.className = "col-sm-2";
+//            div.appendChild(btnAsk);
+//
+//            $("#actionBar").append(div);
+//        }
+//        
+//        $(".btnAsk").click(function() {
+//            respondToBtnAskClick($(this));
+//        });
+//    }; 
+
+//    let actionResponse = function(cards, playerName) {
+////        console.log("Cards");
+////        console.log(cards.length);
+//        let cardFound = (cards.length > 0);
+//        let resultClass = (cardFound === true ? "success" : "fail");
+//        let msg = playerName;
+//        let buttons = [];
+//        
+//        if (cardFound === true) {
+//            msg += " has the card & gives it to you!";
+//        }
+//        else {
+//            msg += " does not have the card. Go Fish!";
+//            
+//            let $btnText = document.createTextNode("Go Fish");
+//            let $btnGoFish = document.createElement("button");
+//            $btnGoFish.id = "btnGoFish";
+//            $btnGoFish.appendChild($btnText);
+//            
+//            buttons.push($btnGoFish);
+//        }
+//        
+//        let $btnNextTurn = document.createElement("button");
+//        $btnNextTurn.id = "btnNextTurn";
+//        let $btnText = document.createTextNode("Next turn");
+//        $btnNextTurn.appendChild($btnText);
+//        buttons.push($btnNextTurn);
+//        
+//        let resultMsg = document.createTextNode(msg);
+//        
+//        let resultContainer = document.createElement("div")
+//        resultContainer.className = resultClass;
+//        resultContainer.appendChild(resultMsg);
+//        
+//        
+//        for (let i = 0; i < buttons.length; i++) {
+//            resultContainer.appendChild(buttons[i]);
+//            let $space = document.createTextNode("\xa0"); //&nbsp;");
+//            resultContainer.appendChild($space);
+//        }
+//        
+//        let actionResp = document.createElement("div");
+//        actionResp.id = "actionResponse";
+//        actionResp.appendChild(resultContainer);
+//        return actionResp;
+//    }
+//    
+//    let checkIfHandContainsCard = function($selectElem, gameId, playerId, playerName, handId) {
+//        let cardNum = $selectElem.val();
+//        let requestUrl = "/gofish/game/" + gameId + "/player/" + playerId + "/hand/" + 
+//                handId + "/card?card_value=" + cardNum;
+////        alert(requestUrl);
+//        
+//        $.ajax({
+//            method: "GET",
+//            url: requestUrl,
+////            contentType: "application/json",
+//            dataType: "json"
+////            data: JSON.stringify(reqData) 
+//        })
+//        .done(function(data) {
+////            console.log(data);
+//            let actionResp = actionResponse(data["cards"], playerName);
+//            $("#actionBar").append(actionResp);
+//        });
+//    };
+//    
+//    let respondToBtnAskClick = function($btnElem) {
+//       
+//       let selector = buildCardSelector();
+//       
+//       $("#actionBar").append(selector);
+//       
+//       let gameId = $("#gameId").text();
+//       let playerId = $btnElem.data("player-id");
+//       let playerName = $btnElem.data("player-name");
+//       let handId = $btnElem.data("hand-id");
+//       
+//       $("#selectCardInHand").change(function() {
+//           checkIfHandContainsCard($(this), gameId, playerId, playerName, handId);
+//       });
+//       
+//
+//    };
     
 });

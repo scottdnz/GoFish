@@ -1,7 +1,69 @@
 **GoFish game project notes**
 
-16/5/20:
+24/7/20:
+Mapped out messages & buttons behaviour for turns
+demo in file:///home/scott/ws/js/tests/t_card_actionbar_layout/t_card_actionbar_layout2.html
+also updated HTML - fixed areas now, just going to disable buttons when not right context
 
+main.js startTurns method
+Made a Player class to build DOM objects
+see below!
+
+
+
+Same current player actions:
+    ask a player for a card action
+    go fish a card action
+    next turn action
+
+Each turn:
+-update "playerX's turn"
+-update actionAsk
+-update actionResponse
+-update playerRow(s)
+
+
+if it's mainPlayer's turn, let them ask someone else for a card
+    fail: mainPlayer go fish
+    success: NPC gives card to mainPlayer
+        remove card from NPC hand
+        assign card to mainPlayer hand
+        - mainPlayer turn again
+
+-if it's NPC player's turn, ask someone else for a card
+    fail: the selected player Go Fish
+    success: selected player gives card to NPC Player
+        remove card from selected player
+        give card to mainPlayer
+        NPC player turn again
+
+
+
+Player
+    goFish
+    receiveCard
+    giveCard
+    displayActionAskBar
+    displayActionResponseBar
+    askOtherPlayerForCard
+    answerOtherPlayerforCard
+
+Turn
+   for the current player, displayActionAskBar
+   after an action, displayActionResponseBar
+
+
+
+
+
+16-7/5/20:
+-Can take X cards from deck + assign to hand
+-2 new Postman requests
+-Need to finish functionality for GoFish button - have JS
+    --> need to update the UI with the new card for the main player
+-Need to respond to player giving main player a card
+-Need to deal with player turn moving on, and other players asking the mainPlayer for a card
+    if have, receive card from another player. If not, take card from top of deck
 
 3/5/20:
 
