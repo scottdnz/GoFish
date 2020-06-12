@@ -1,6 +1,20 @@
 **GoFish game project notes**
 
-24/7/20:
+13/6/20:
+http://localhost/gofish/main
+
+Got actionAsk and actionResponse to update UI using new Player class
+Next, need image in GoFish button
+respond to GoFish button click 
+respond to Next button click
+
+
+
+1/6/20:
+
+
+
+24/5/20:
 Mapped out messages & buttons behaviour for turns
 demo in file:///home/scott/ws/js/tests/t_card_actionbar_layout/t_card_actionbar_layout2.html
 also updated HTML - fixed areas now, just going to disable buttons when not right context

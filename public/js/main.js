@@ -11,7 +11,7 @@ $(document).ready(function() {
     
     let currentPlayers = [];
    
-    let fillPlayerRow = function(playerName, playerElem, cards) {
+    let fillPlayerRow = function(playerName, playerId, playerElem, cards) {
         // Sort cards by value key        
         cards.sort(function(a, b) { return (a["value"] > b["value"]) ? 1 : -1; });
         
@@ -29,6 +29,7 @@ $(document).ready(function() {
 
         let playerCardsRow = document.createElement("div");
         playerCardsRow.id = playerElem;
+        playerCardsRow.setAttribute("data-player-id", playerId);
         playerCardsRow.className = "row";
         
         let currentCardValue = -1;
@@ -37,7 +38,7 @@ $(document).ready(function() {
         cardBox.className = "cardBox col-1";
         
         // Show all cards in player row
-        if (testMode === true || playerName == "clientPlayer") {
+        if (testMode === true || playerName === "clientPlayer") {
         
             numCardsSame = 0;
 
@@ -108,7 +109,6 @@ $(document).ready(function() {
         $("#statusMessages").empty().append(list);
     }
     
-//    $("#btnDealCards").click(function() {
     let dealCards = function() {
         $.ajax({
             method: "GET",
@@ -118,74 +118,87 @@ $(document).ready(function() {
             for (let i = 0; i < data.length; i++) {
                 let playerCurrent = data[i];
                 let playerName = playerCurrent["player"]["name"];
+                let playerId = playerCurrent["player"]["id"];
                 let playerCards = playerCurrent["cards"];
 
                 let playerElem = "rowPlayer" + i;
-                fillPlayerRow(playerName, playerElem, playerCards);
+                fillPlayerRow(playerName, playerId, playerElem, playerCards);
             }
             numPlayers = data.length;
             currentPlayerTurn = data[0];
             currentPlayers = data;
             updateStatusArea();
 //            populateActionBar();
+            
+            startTurns();
         });
     }
-//    })
-
-
 
     let clearActionBar = function() {
         $("#actionBar").empty();
     };
     
-    let buildCardSelector = function() {
-       let lblText = document.createTextNode("Ask for which card?");
-       
-       let label = document.createElement("label");
-       label.appendChild(lblText);
-       
-       let selectBox = document.createElement("select");
-       selectBox.id = "selectCardInHand";
-       let optionVals = {1: "Ace",
-            2: "2", 
-            3: "3", 
-            4: "4", 
-            5: "5",
-            6: "6",
-            7: "7",
-            8: "8",
-            9: "9",
-            10: "10",
-            11: "Jack",
-            12: "Queen",
-            13: "King"
-       };
-       let keys = Object.keys(optionVals);
-       for (let i = 0; i < keys.length; i++) {
-           let optText = document.createTextNode(optionVals[keys[i]]);
-           
-           let option = document.createElement("option");
-           option.setAttribute("value", keys[i]);
-           option.appendChild(optText);
-           
-           selectBox.appendChild(option);
-       }
-       
-       let selector = document.createElement("div");
-       selector.className = "col-sm-4";
-       selector.appendChild(label);
-       selector.appendChild(selectBox);
-       
-       return selector;
+    let clearAskBar = function() {
+        $("#actionAsk").empty();
     };
     
-    let startTurns = function() {
-        let player = new Player();
+    let clearResponseBar = function() {
+        $("#actionResponse").empty();
+    };
+    
+    let showActionResponse = function() {
+        clearResponseBar();
+        let player = new Player(currentPlayerTurn);
         let barCols = player.buildActionResponseBar(); 
         
         for (let i = 0; i < barCols.length; i++) {
             $("#actionResponse").append(barCols[i]);
         }
+        
+        let br = document.createElement("br");
+        $("#actionResponse").append(br);
+        
+        /* // Move me!
+        clearResponseBar();
+        let player = new Player(currentPlayerTurn);
+        let barCols = player.buildActionResponseBar(); 
+        
+        for (let i = 0; i < barCols.length; i++) {
+            $("#actionResponse").append(barCols[i]);
+        }
+        
+        let br = document.createElement("br");
+        $("#actionResponse").append(br);
+         */
+    };
+    
+    let startTurns = function() {
+        let currentPlayerId = currentPlayerTurn.player.id;
+        let otherPlayers = [];
+        for (let i = 0; i < currentPlayers.length; i++) {
+            if (currentPlayers[i].player.id !== currentPlayerId) {
+                otherPlayers.push(currentPlayers[i]);
+            }
+        }
+        
+        clearAskBar();
+        let player = new Player(currentPlayerTurn);
+        barCols = player.buildAskBar(otherPlayers);
+        for (let i = 0; i < barCols.length; i++) {
+            $("#actionAsk").append(barCols[i]);
+        }
+        
+        $(".btnAskPlayer").click(function() {
+            let playerToAskId = $(this).data("player-id");
+            console.log("playerToAskId: " + playerToAskId);
+            let playerToAskHandId = $(this).data("hand-id");
+            let cardNum = $("#selectCardInHand").val();
+
+            checkIfHandContainsCardThenUpdate(currentPlayerTurn.player.id, playerToAskId, 
+                playerToAskHandId, cardNum);
+            
+        });
+        
         
     }   
        
@@ -193,7 +206,7 @@ $(document).ready(function() {
         let reqData = { 
             "number_players": "3",
             "players": [
-                {"name": "clientPlayer"},
+                {"name": "You"},
                 {"name": "Joel-NPC"},
                 {"name": "Lauren-NPC"}
             ]
@@ -212,7 +225,7 @@ $(document).ready(function() {
 //            $("#btnGameNew").attr("readonly", "true");
             clearActionBar();
             dealCards();
-            startTurns();
+            
             
            
     
@@ -351,42 +364,49 @@ $(document).ready(function() {
 //        return actionResp;
 //    }
 //    
-//    let checkIfHandContainsCard = function($selectElem, gameId, playerId, playerName, handId) {
-//        let cardNum = $selectElem.val();
-//        let requestUrl = "/gofish/game/" + gameId + "/player/" + playerId + "/hand/" + 
-//                handId + "/card?card_value=" + cardNum;
-////        alert(requestUrl);
-//        
-//        $.ajax({
-//            method: "GET",
-//            url: requestUrl,
-////            contentType: "application/json",
-//            dataType: "json"
-////            data: JSON.stringify(reqData) 
-//        })
-//        .done(function(data) {
-////            console.log(data);
-//            let actionResp = actionResponse(data["cards"], playerName);
-//            $("#actionBar").append(actionResp);
-//        });
-//    };
-//    
-//    let respondToBtnAskClick = function($btnElem) {
-//       
-//       let selector = buildCardSelector();
-//       
-//       $("#actionBar").append(selector);
-//       
-//       let gameId = $("#gameId").text();
-//       let playerId = $btnElem.data("player-id");
-//       let playerName = $btnElem.data("player-name");
-//       let handId = $btnElem.data("hand-id");
-//       
-//       $("#selectCardInHand").change(function() {
-//           checkIfHandContainsCard($(this), gameId, playerId, playerName, handId);
-//       });
-//       
-//
-//    };
+
+    let checkIfHandContainsCardThenUpdate = function(currentPlayerId, playerToAskId, 
+        playerToAskHandId, cardNum) {
+        let requestUrl = "/gofish/game/" + gameIdCurrent + "/player/" + playerToAskId + 
+            "/hand/" + playerToAskHandId + "/card?card_value=" + cardNum;
+        
+        $.ajax({
+            method: "GET",
+            url: requestUrl,
+//            contentType: "application/json",
+            dataType: "json"
+//            data: JSON.stringify(reqData) 
+        })
+        .done(function(data) {
+            let playerAsked = null;
+            for (let i = 0; i < currentPlayers.length; i++) {
+                if (currentPlayers[i].player.id === playerToAskId) {
+                    playerAsked = currentPlayers[i];
+                    break;
+                }
+            }
+            
+            let actionResult = (data.cards.length > 0);
+            // Success
+            let player = new Player(currentPlayerTurn);
+            let actionResponse = player.buildActionResponseBarFromAsk(playerAsked, 
+                currentPlayerTurn, actionResult);
+            clearResponseBar();
+            $("#actionResponse").append(actionResponse);
+        });
+    };
+
+/*
+    let respondToBtnAskClick = function($btnElem) {
+       let gameId = $("#gameId").text();
+       let playerId = $btnElem.data("player-id");
+       let playerName = $btnElem.data("player-name");
+       let handId = $btnElem.data("hand-id");
+       
+       $("#selectCardInHand").change(function() {
+           checkIfHandContainsCard($(this), gameId, playerId, playerName, handId);
+       });
+  */     
+
     
 });
